@@ -172,7 +172,20 @@ noscript .resume-document{margin-bottom:30px}
   .resume-document{padding:24px 20px}.resume-controls{padding:12px;flex-wrap:wrap}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
-@media print{@page{size:letter;margin:12mm}body{background:#fff;color:#17201b}.resume-controls{display:none!important}body:has(.resume-dialog[open])>header,body:has(.resume-dialog[open])>main,body:has(.resume-dialog[open])>footer,body:has(.resume-dialog[open])>.skip-link{display:none!important}.resume-dialog[open]{position:static;display:block;border:0;width:auto;max-width:none;max-height:none;overflow:visible;margin:0}.resume-dialog::backdrop{display:none}.resume-document{padding:0;font-size:10px;line-height:1.4}.resume-document h1{font-size:25px}.resume-document .resume-role{font-size:13px}.resume-contact{font-size:9px}.resume-document h2{font-size:12px;margin-top:14px}.resume-document h3{font-size:11px;margin-top:10px}.resume-document h4{font-size:10px}.resume-document li{margin:3px 0}.resume-document h2,.resume-document h3,.resume-document h4{break-after:avoid}.resume-document li{break-inside:avoid}}
+#print-resume{display:none}
+@media print{@page{size:letter;margin:0.5in}
+  html:has(body.printing-resume){width:auto!important;min-width:0!important}body.printing-resume{width:auto!important;min-width:0!important;background:#fff!important;color:#17201b;margin:0}
+  body.printing-resume>*:not(#print-resume){display:none!important}
+  body.printing-resume #print-resume{display:block!important;width:7.5in;max-width:100%}
+  body:has(.resume-dialog[open])>*:not(dialog){display:none!important}
+  body:has(.resume-dialog[open]){background:#fff!important}
+  .resume-dialog[open]{position:absolute!important;inset:0 auto auto 0!important;width:7.5in!important;max-width:7.5in!important;height:auto!important;max-height:none!important;overflow:visible!important;border:0!important;border-radius:0!important;margin:0!important;padding:0!important;transform:none!important}
+  .resume-dialog::backdrop{display:none}.resume-dialog .resume-controls{display:none!important}
+  .resume-dialog .resume-document{padding:0;font-size:11.5px;line-height:1.45}
+  #print-resume .resume-document{padding:0;font-size:11.5px;line-height:1.45}
+  #print-resume .resume-document h1{font-size:28px}#print-resume .resume-role{font-size:15px}#print-resume .resume-contact{font-size:11px}
+  #print-resume h2{font-size:14px;margin-top:16px}#print-resume h3{font-size:13px;margin-top:12px}#print-resume h4{font-size:12px}#print-resume li{margin:3px 0;break-inside:avoid}
+  #print-resume h2,#print-resume h3,#print-resume h4{break-after:avoid}}
   </style>
 </head>
 <body>
@@ -369,7 +382,18 @@ noscript .resume-document{margin-bottom:30px}
     });
   });
   document.querySelector('[data-close-resume]')?.addEventListener('click', () => dialog.close());
-  document.querySelector('[data-print-resume]')?.addEventListener('click', () => window.print());
+  const printBox = document.createElement('div');
+  printBox.id = 'print-resume';
+  printBox.appendChild(dialog.querySelector('.resume-document').cloneNode(true));
+  document.body.appendChild(printBox);
+  const endPrint = () => { if (!document.body.classList.contains('printing-resume')) return; document.body.classList.remove('printing-resume'); if (!dialog.open) dialog.showModal(); };
+  addEventListener('afterprint', endPrint);
+  addEventListener('beforeprint', () => { if (dialog.open) { dialog.close(); document.body.classList.add('printing-resume'); } });
+  document.querySelector('[data-print-resume]')?.addEventListener('click', () => {
+    dialog.close();
+    document.body.classList.add('printing-resume');
+    setTimeout(() => { window.print(); setTimeout(endPrint, 500); }, 50);
+  });
   dialog?.addEventListener('click', e => {
     if (e.target !== dialog) return;
     const r = dialog.getBoundingClientRect();
